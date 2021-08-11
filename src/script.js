@@ -2,7 +2,6 @@
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
 import {
   CSS2DRenderer,
   CSS2DObject,
@@ -16,6 +15,7 @@ import GUI from "tweakpane";
     camera,
     root,
     control,
+    models = [],
     renderer,
     labelRenderer,
     xmlhttp,
@@ -35,15 +35,11 @@ import GUI from "tweakpane";
     height: window.innerHeight,
   };
 
-  root = new THREE.Group();
-
   // Canvas
   canvas = document.querySelector("canvas.webgl");
 
   // Scene
   scene = new THREE.Scene();
-
-  scene.add(root);
 
   // Lights
   const pointLight = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -72,7 +68,7 @@ import GUI from "tweakpane";
   ground.receiveShadow = true;
   scene.add(ground);
 
-  let grid = new THREE.GridHelper(500, 100, 0x000000, 0x000000);
+  let grid = new THREE.GridHelper(1000, 500, 0x000000, 0x000000);
   grid.position.y = -3;
   // @ts-ignore
   grid.material.fog = false;
@@ -91,7 +87,7 @@ import GUI from "tweakpane";
   });
   renderer.setSize(sizes.width, sizes.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  control = new TrackballControls(camera, renderer.domElement);
+  // control = new TrackballControls(camera, renderer.domElement);
 
   labelRenderer = new CSS2DRenderer();
   labelRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -101,6 +97,7 @@ import GUI from "tweakpane";
 
   let controls = new OrbitControls(camera, labelRenderer.domElement);
   controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
   controls.maxDistance = 100;
   controls.minDistance = 5;
 
@@ -151,7 +148,7 @@ import GUI from "tweakpane";
 
   animate();
 
-  const addSingleBond = (data1, data2) => {
+  const addSingleBond = (data1, data2, root) => {
     let distance = data1.distanceTo(data2);
     let geometry = new THREE.CylinderGeometry(0.05, 0.05, distance);
     let material = new THREE.MeshPhongMaterial({
@@ -170,7 +167,7 @@ import GUI from "tweakpane";
     root.add(grp);
   };
 
-  const addDoubleBond = (data1, data2) => {
+  const addDoubleBond = (data1, data2, root) => {
     let distance = data1.distanceTo(data2);
     let geometry = new THREE.CylinderGeometry(0.042, 0.042, distance);
     let material = new THREE.MeshPhongMaterial({
@@ -193,7 +190,7 @@ import GUI from "tweakpane";
     root.add(grp);
   };
 
-  const addTripleBond = (data1, data2) => {
+  const addTripleBond = (data1, data2, root) => {
     let distance = data1.distanceTo(data2);
     let geometry = new THREE.CylinderGeometry(0.039, 0.039, distance);
     let material = new THREE.MeshPhongMaterial({
@@ -218,7 +215,7 @@ import GUI from "tweakpane";
     root.add(grp);
   };
 
-  const addSphere = (data) => {
+  const addSphere = (data, root) => {
     let geometry = new THREE.SphereGeometry(data.radius, 64, 64);
     let material = new THREE.MeshPhongMaterial({
       color: new THREE.Color(data.color),
@@ -234,10 +231,14 @@ import GUI from "tweakpane";
     labels.push(label);
   };
 
-  const load = (data) => {
+  const load = (data, i) => {
+    root = new THREE.Group();
+    scene.add(root);
+    root.position.set(15 * i, i % 2 === 1 ? 15 : 0, 0);
+    models.push(root);
     if (!data) throw new Error("Data not found..!");
     data.forEach((e) => {
-      addSphere(e);
+      addSphere(e, root);
       data.forEach((m) => {
         let index = m.targets?.findIndex((a) => a.ref == e.uid);
         let deli = e.targets?.findIndex((a) => a.ref == m.uid);
@@ -249,21 +250,24 @@ import GUI from "tweakpane";
           if (m.targets[index].type == "double") {
             addDoubleBond(
               new THREE.Vector3(e.position[0], e.position[1], e.position[2]),
-              new THREE.Vector3(m.position[0], m.position[1], m.position[2])
+              new THREE.Vector3(m.position[0], m.position[1], m.position[2]),
+              root
             );
             m.targets.splice(index, 1);
             e.targets.splice(deli, 1);
           } else if (m.targets[index].type == "triple") {
             addTripleBond(
               new THREE.Vector3(e.position[0], e.position[1], e.position[2]),
-              new THREE.Vector3(m.position[0], m.position[1], m.position[2])
+              new THREE.Vector3(m.position[0], m.position[1], m.position[2]),
+              root
             );
             m.targets.splice(index, 1);
             e.targets.splice(deli, 1);
           } else {
             addSingleBond(
               new THREE.Vector3(e.position[0], e.position[1], e.position[2]),
-              new THREE.Vector3(m.position[0], m.position[1], m.position[2])
+              new THREE.Vector3(m.position[0], m.position[1], m.position[2]),
+              root
             );
             m.targets.splice(index, 1);
             e.targets.splice(deli, 1);
@@ -281,18 +285,21 @@ import GUI from "tweakpane";
     }
     xmlhttp.onreadystatechange = function () {
       if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-        root.clear();
         labels.forEach((e) => e.remove());
-        load(JSON.parse(xmlhttp.response));
+        const data = JSON.parse(xmlhttp.response);
+        data.forEach((e, i) => load(e, i));
       }
     };
     xmlhttp.open("GET", "/data.json", true);
     xmlhttp.send();
   })();
+
   gui
-    .addButton({ title: "Auto-Center", label: "Auto-Center" })
-    .on("click", () => {
-      Focus(root.position);
+    .addInput({ model: 1 }, "model", {
+      options: { 1: 1, 2: 2 },
+    })
+    .on("change", ({ value }) => {
+      Focus(models[value - 1].position);
     });
 
   // Focus
@@ -310,15 +317,15 @@ import GUI from "tweakpane";
       let _temp = (z - controls.target.z) / 10;
       controls.target.z += _temp;
     }
-    if (Math.abs(camera.position.x - x) > 0.0001) {
+    if (Math.abs(camera.position.x - x) > 1) {
       let _temp = (x - camera.position.x) / 10;
       camera.position.x += _temp;
     }
-    if (Math.abs(camera.position.y - y) > 0.0001) {
+    if (Math.abs(camera.position.y - y) > 1) {
       let _temp = (y - camera.position.y) / 10;
       camera.position.y += _temp;
     }
-    if (Math.abs(camera.position.z - z) > 0.0001) {
+    if (Math.abs(camera.position.z - z) > 1) {
       let _temp = (z - camera.position.z) / 10;
       camera.position.z += _temp;
     }
@@ -329,9 +336,9 @@ import GUI from "tweakpane";
         Math.abs(controls.target.z - z) < 0.0001
       ) &&
       !(
-        Math.abs(camera.position.x - x) < 0.0001 &&
-        Math.abs(camera.position.y - y) < 0.0001 &&
-        Math.abs(camera.position.z - z) < 0.0001
+        Math.abs(camera.position.x - x) < 1 &&
+        Math.abs(camera.position.y - y) < 1 &&
+        Math.abs(camera.position.z - z) < 1
       )
     ) {
       requestAnimationFrame(() => Focus(pos));
