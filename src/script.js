@@ -14,11 +14,12 @@ import GUI from "tweakpane";
     scene,
     camera,
     root,
-    control,
+    end,
     models = [],
     renderer,
     labelRenderer,
     xmlhttp,
+    processing = [],
     labels = [];
 
   // Debug
@@ -87,7 +88,6 @@ import GUI from "tweakpane";
   });
   renderer.setSize(sizes.width, sizes.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  // control = new TrackballControls(camera, renderer.domElement);
 
   labelRenderer = new CSS2DRenderer();
   labelRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -129,13 +129,7 @@ import GUI from "tweakpane";
   });
 
   const animate = () => {
-    // Update objects
-    // if (autorotate.autoRotate){
-    //     root.rotation.y += .001
-    //     root.rotation.x += .005
-    // }
-
-    // Update Orbital Controls
+    if (end) return renderer.dispose();
     controls.update();
 
     // Render
@@ -281,13 +275,15 @@ import GUI from "tweakpane";
     if (window.XMLHttpRequest) {
       xmlhttp = new XMLHttpRequest();
     } else {
+      /* eslint-disable no-undef */
       xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
     }
     xmlhttp.onreadystatechange = function () {
       if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
         labels.forEach((e) => e.remove());
         const data = JSON.parse(xmlhttp.response);
-        data.forEach((e, i) => load(e, i));
+        data.data.forEach((e, i) => load(e, i));
+        Focus(models[0].position);
       }
     };
     xmlhttp.open("GET", "/data.json", true);
@@ -302,8 +298,28 @@ import GUI from "tweakpane";
       Focus(models[value - 1].position);
     });
 
+  gui.addButton({ title: "Troubleshoot" }).on("click", () => {
+    end = true;
+    setTimeout(() => {
+      end = false;
+      controls.reset();
+      animate();
+    }, 1000);
+  });
+  gui.addButton({ title: "Kill" }).on("click", () => {
+    scene.clear();
+    labels.forEach((e) => e.remove());
+  });
+
   // Focus
-  const Focus = (pos) => {
+  const Focus = (pos, process) => {
+    if (!process) {
+      processing.length = 0;
+      process = Math.random();
+      processing.push(process);
+    } else if (!processing.includes(process)) return;
+    console.log(process);
+
     const { x, y, z } = pos;
     if (Math.abs(controls.target.x - x) > 0.0001) {
       let _temp = (x - controls.target.x) / 10;
@@ -317,15 +333,15 @@ import GUI from "tweakpane";
       let _temp = (z - controls.target.z) / 10;
       controls.target.z += _temp;
     }
-    if (Math.abs(camera.position.x - x) > 1) {
+    if (Math.abs(camera.position.x - x) > 0.1) {
       let _temp = (x - camera.position.x) / 10;
       camera.position.x += _temp;
     }
-    if (Math.abs(camera.position.y - y) > 1) {
+    if (Math.abs(camera.position.y - y) > 0.1) {
       let _temp = (y - camera.position.y) / 10;
       camera.position.y += _temp;
     }
-    if (Math.abs(camera.position.z - z) > 1) {
+    if (Math.abs(camera.position.z - z) > 0.1) {
       let _temp = (z - camera.position.z) / 10;
       camera.position.z += _temp;
     }
@@ -336,12 +352,12 @@ import GUI from "tweakpane";
         Math.abs(controls.target.z - z) < 0.0001
       ) &&
       !(
-        Math.abs(camera.position.x - x) < 1 &&
-        Math.abs(camera.position.y - y) < 1 &&
-        Math.abs(camera.position.z - z) < 1
+        Math.abs(camera.position.x - x) < 0.1 &&
+        Math.abs(camera.position.y - y) < 0.1 &&
+        Math.abs(camera.position.z - z) < 0.1
       )
     ) {
-      requestAnimationFrame(() => Focus(pos));
+      requestAnimationFrame(() => Focus(pos, process));
     }
   };
 })();
