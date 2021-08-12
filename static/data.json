@@ -433,6 +433,45 @@
         "radius": 0.2,
         "position": [0, 0, -1]
       }
+    ],
+    [
+      {
+        "name": "Xe",
+        "uid": 1111,
+        "targets": [
+          { "ref": 1112, "type": "double" },
+          { "ref": 1113, "type": "double" },
+          { "ref": 1114, "type": "double" }
+        ],
+        "color": "rgb(230, 34, 34)",
+        "radius": 0.3,
+        "position": [0, 0, 0],
+        "lonePairs": [[0, 1, 0]]
+      },
+      {
+        "name": "O",
+        "uid": 1112,
+        "targets": [{ "ref": 1111, "type": "double" }],
+        "color": "rgb(57, 142, 212)",
+        "radius": 0.2,
+        "position": [1, -0.5, 0]
+      },
+      {
+        "name": "O",
+        "uid": 1113,
+        "targets": [{ "ref": 1111, "type": "double" }],
+        "color": "rgb(57, 142, 212)",
+        "radius": 0.2,
+        "position": [-0.5, -0.5, 0.866]
+      },
+      {
+        "name": "O",
+        "uid": 1114,
+        "targets": [{ "ref": 1111, "type": "double" }],
+        "color": "rgb(57, 142, 212)",
+        "radius": 0.2,
+        "position": [-0.5, -0.5, -0.866]
+      }
     ]
   ]
 }

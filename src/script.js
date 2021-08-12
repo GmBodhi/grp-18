@@ -23,6 +23,7 @@ import GUI from "tweakpane";
     xmlhttp,
     processing = [],
     lonePair,
+    focused = { model: 1 },
     labels = [];
 
   // Debug
@@ -60,7 +61,7 @@ import GUI from "tweakpane";
   scene.add(camera);
 
   //Grid
-  let geometry = new THREE.PlaneGeometry(500, 500);
+  let geometry = new THREE.PlaneGeometry(1000, 1000);
   let material = new THREE.MeshPhongMaterial({
     color: 0x2b2b2b,
     depthWrite: false,
@@ -111,10 +112,6 @@ import GUI from "tweakpane";
   });
   controls.autoRotate = true;
   autorotate.autoRotate = true;
-
-  // gui.addInput(pointLight.position, 'x')
-  // gui.addInput(pointLight.position, 'y')
-  // gui.addInput(pointLight.position, 'z')
 
   window.addEventListener("resize", () => {
     // Update sizes
@@ -293,13 +290,14 @@ import GUI from "tweakpane";
     });
     controls.autoRotate = autorotate.autoRotate;
   };
-  let model = 0;
   window.addEventListener("keydown", (e) => {
     if (e.code === "ArrowRight") {
-      if (model !== 6) return Focus(models[++model].position);
+      if (focused.model !== 8)
+        return Focus(models[++focused.model - 1].position);
       else return;
     } else if (e.code === "ArrowLeft") {
-      if (model !== 0) return Focus(models[--model].position);
+      if (focused.model !== 1)
+        return Focus(models[--focused.model - 1].position);
       else return;
     } else if (e.code === "Escape") {
       controls.autoRotate = !controls.autoRotate;
@@ -340,8 +338,8 @@ import GUI from "tweakpane";
 
   // gui stuff
   gui
-    .addInput({ model: 1 }, "model", {
-      options: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7 },
+    .addInput(focused, "model", {
+      options: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8 },
     })
     .on("change", ({ value }) => {
       Focus(models[value - 1].position);
