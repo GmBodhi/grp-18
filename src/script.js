@@ -6,6 +6,8 @@ import {
   CSS2DRenderer,
   CSS2DObject,
 } from "three/examples/jsm/renderers/CSS2DRenderer.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import GUI from "tweakpane";
 //Safety wrapper
 
@@ -20,6 +22,7 @@ import GUI from "tweakpane";
     labelRenderer,
     xmlhttp,
     processing = [],
+    lonePair,
     labels = [];
 
   // Debug
@@ -142,6 +145,17 @@ import GUI from "tweakpane";
 
   animate();
 
+  const addLonePair = async (pos1, pos2, root) => {
+    console.log("Adding lone pair");
+    if (!lonePair) return setTimeout(() => addLonePair(pos1, pos2, root), 10);
+    console.log("Added");
+    let lone = lonePair.clone();
+    lone.position.set(pos2.x, pos2.y, pos2.z);
+    lone.lookAt(pos1);
+    lone.rotateX(Math.PI / 2);
+    root.add(lone);
+  };
+
   const addSingleBond = (data1, data2, root) => {
     let distance = data1.distanceTo(data2);
     let geometry = new THREE.CylinderGeometry(0.05, 0.05, distance);
@@ -208,7 +222,6 @@ import GUI from "tweakpane";
     grp.lookAt(data2);
     // grp.rotateZ((Math.PI * 3) / 4);
     root.add(grp);
-    console.log(grp);
   };
 
   const addSphere = (data, root) => {
@@ -238,6 +251,13 @@ import GUI from "tweakpane";
       data.forEach((m) => {
         let index = m.targets?.findIndex((a) => a.ref == e.uid);
         let deli = e.targets?.findIndex((a) => a.ref == m.uid);
+        m.lonePairs?.forEach((e) => {
+          addLonePair(
+            new THREE.Vector3(m.position[0], m.position[1], m.position[2]),
+            new THREE.Vector3(e[0], e[1], e[2]),
+            root
+          );
+        });
 
         if (
           ![undefined, null, -1].includes(index) &&
@@ -276,7 +296,7 @@ import GUI from "tweakpane";
   let model = 0;
   window.addEventListener("keydown", (e) => {
     if (e.code === "ArrowRight") {
-      if (model !== 2) return Focus(models[++model].position);
+      if (model !== 6) return Focus(models[++model].position);
       else return;
     } else if (e.code === "ArrowLeft") {
       if (model !== 0) return Focus(models[--model].position);
@@ -285,6 +305,20 @@ import GUI from "tweakpane";
       controls.autoRotate = !controls.autoRotate;
     }
   });
+
+  // loader
+  (() => {
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    loader.setDRACOLoader(dracoLoader);
+
+    loader.load("/test.glb", function (gltf) {
+      gltf.scene.scale.set(0.3, 0.3, 0.3);
+      lonePair = gltf.scene;
+    });
+  })();
+
+  // load json
   (() => {
     if (window.XMLHttpRequest) {
       xmlhttp = new XMLHttpRequest();
@@ -304,6 +338,7 @@ import GUI from "tweakpane";
     xmlhttp.send();
   })();
 
+  // gui stuff
   gui
     .addInput({ model: 1 }, "model", {
       options: { 1: 1, 2: 2, 3: 3 },
