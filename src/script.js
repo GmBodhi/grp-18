@@ -28,7 +28,7 @@ import GUI from "tweakpane";
 
   // Debug
   let gui = new GUI({
-    title: "GUI",
+    title: "Settings",
     expanded: false,
   });
   // @ts-ignore
