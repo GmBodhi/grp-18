@@ -341,7 +341,7 @@ import GUI from "tweakpane";
   // gui stuff
   gui
     .addInput({ model: 1 }, "model", {
-      options: { 1: 1, 2: 2, 3: 3 },
+      options: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7 },
     })
     .on("change", ({ value }) => {
       Focus(models[value - 1].position);
