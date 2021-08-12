@@ -5,12 +5,4 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 module.exports = merge(commonConfiguration, {
   mode: "production",
   plugins: [new CleanWebpackPlugin()],
-  optimization: {
-    minimize: true,
-    minimizer: [
-      new JsonMinimizerPlugin({
-        test: /\.foo\.json/i,
-      }),
-    ],
-  },
 });
