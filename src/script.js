@@ -197,7 +197,7 @@ import GUI from "tweakpane";
     obj2.rotateX(Math.PI / 2);
     obj3.rotateX(Math.PI / 2);
     obj1.position.x += 0.08;
-    obj3.position.x += 0.08;
+    obj3.position.x -= 0.08;
     let grp = new THREE.Group();
     grp.add(obj1, obj2, obj3);
     grp.position.set(
@@ -206,7 +206,9 @@ import GUI from "tweakpane";
       (data1.z + data2.z) / 2
     );
     grp.lookAt(data2);
+    // grp.rotateZ((Math.PI * 3) / 4);
     root.add(grp);
+    console.log(grp);
   };
 
   const addSphere = (data, root) => {
@@ -304,7 +306,7 @@ import GUI from "tweakpane";
 
   gui
     .addInput({ model: 1 }, "model", {
-      options: { 1: 1, 2: 2 },
+      options: { 1: 1, 2: 2, 3: 3 },
     })
     .on("change", ({ value }) => {
       Focus(models[value - 1].position);
@@ -330,7 +332,6 @@ import GUI from "tweakpane";
       process = Math.random();
       processing.push(process);
     } else if (!processing.includes(process)) return;
-    console.log(process);
 
     const { x, y, z } = pos;
     if (Math.abs(controls.target.x - x) > 0.0001) {
