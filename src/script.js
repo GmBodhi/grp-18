@@ -25,7 +25,7 @@ import GUI from "tweakpane";
   // Debug
   let gui = new GUI({
     title: "GUI",
-    expanded: true,
+    expanded: false,
   });
   // @ts-ignore
   gui.containerElem_.style.zIndex = "1";
@@ -228,7 +228,7 @@ import GUI from "tweakpane";
   const load = (data, i) => {
     root = new THREE.Group();
     scene.add(root);
-    root.position.set(15 * i, i % 2 === 1 ? 15 : 0, 0);
+    root.position.set(15 * i, i * 15, 0);
     models.push(root);
     if (!data) throw new Error("Data not found..!");
     data.forEach((e) => {
@@ -271,6 +271,18 @@ import GUI from "tweakpane";
     });
     controls.autoRotate = autorotate.autoRotate;
   };
+  let model = 0;
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "ArrowRight") {
+      if (model !== 2) return Focus(models[++model].position);
+      else return;
+    } else if (e.code === "ArrowLeft") {
+      if (model !== 0) return Focus(models[--model].position);
+      else return;
+    } else if (e.code === "Escape") {
+      controls.autoRotate = !controls.autoRotate;
+    }
+  });
   (() => {
     if (window.XMLHttpRequest) {
       xmlhttp = new XMLHttpRequest();
