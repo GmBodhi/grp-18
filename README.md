@@ -1,2 +1,3 @@
 # HCG
-https://object3d.netlify.app/
+Worst code I could ever write.
+https://chemgrp18.netlify.app/
