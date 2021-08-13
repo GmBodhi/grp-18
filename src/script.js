@@ -103,15 +103,17 @@ import GUI from "tweakpane";
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
   controls.maxDistance = 100;
-  controls.minDistance = 5;
-
-  let autorotate = { autoRotate: true };
-  gui.addInput(autorotate, "autoRotate").on("change", (e) => {
-    controls.autoRotate = e.value;
-    autorotate.autoRotate = e.value;
-  });
+  controls.minDistance = 4.5;
   controls.autoRotate = true;
-  autorotate.autoRotate = true;
+
+  let response = {
+    autoRotate: document.querySelector("input.tp-ckbv_i"),
+    model: document.querySelector("select.tp-lstv_s"),
+  };
+
+  gui.addInput(controls, "autoRotate").on("change", (e) => {
+    document.querySelector("input.tp-ckbv_i").checked = e.value;
+  });
 
   window.addEventListener("resize", () => {
     // Update sizes
@@ -288,19 +290,24 @@ import GUI from "tweakpane";
         }
       });
     });
-    controls.autoRotate = autorotate.autoRotate;
+    // controls.autoRotate = autorotate.autoRotate;
   };
   window.addEventListener("keydown", (e) => {
     if (e.code === "ArrowRight") {
-      if (focused.model !== 8)
+      if (focused.model !== 8) {
+        document.querySelector("select.tp-lstv_s").selectedIndex++;
+
         return Focus(models[++focused.model - 1].position);
-      else return;
+      } else return;
     } else if (e.code === "ArrowLeft") {
-      if (focused.model !== 1)
+      if (focused.model !== 1) {
+        document.querySelector("select.tp-lstv_s").selectedIndex--;
+
         return Focus(models[--focused.model - 1].position);
-      else return;
+      } else return;
     } else if (e.code === "Escape") {
       controls.autoRotate = !controls.autoRotate;
+      document.querySelector("input.tp-ckbv_i").checked = controls.autoRotate;
     }
   });
 
